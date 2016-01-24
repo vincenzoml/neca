@@ -2,7 +2,7 @@
 .PHONY: build test clean
 
 build:
-	ocamlbuild -pkg graphics nomcell.native
+	ocamlbuild -use-ocamlfind -package graphics nomcell.native
 
 test: build
 	./nomcell.native
