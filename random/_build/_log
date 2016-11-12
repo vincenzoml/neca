@@ -1,0 +1,10 @@
+### Starting build.
+# Target: neca.ml.depends, tags: { extension:ml, file:neca.ml, ocaml, ocamldep, package(graphics), package(str), quiet }
+ocamlfind ocamldep -package str -package graphics -modules neca.ml > neca.ml.depends # cached
+# Target: neca.cmo, tags: { byte, compile, extension:cmo, extension:ml, file:neca.cmo, file:neca.ml, implem, ocaml, package(graphics), package(str), quiet }
+ocamlfind ocamlc -c -package str -package graphics -o neca.cmo neca.ml # cached
+# Target: neca.cmx, tags: { compile, extension:cmx, extension:ml, file:neca.cmx, file:neca.ml, implem, native, ocaml, package(graphics), package(str), quiet }
+ocamlfind ocamlopt -c -package str -package graphics -o neca.cmx neca.ml # cached
+# Target: neca.native, tags: { dont_link_with, extension:native, file:neca.native, link, native, ocaml, package(graphics), package(str), program, quiet }
+ocamlfind ocamlopt -linkpkg -package str -package graphics neca.cmx -o neca.native # cached
+# Compilation successful.

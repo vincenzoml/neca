@@ -1,0 +1,3 @@
+/data/vincenzo/Dropbox/src/neca/life/life/obj/x86/Release/.NETFramework,Version=v4.5.AssemblyAttribute.fs
+/data/vincenzo/Dropbox/src/neca/life/life/bin/Release/life.exe
+/data/vincenzo/Dropbox/src/neca/life/life/obj/x86/Release/life.exe

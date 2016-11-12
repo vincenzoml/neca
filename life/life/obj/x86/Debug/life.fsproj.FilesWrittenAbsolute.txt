@@ -1,0 +1,5 @@
+/data/vincenzo/Dropbox/src/neca/life/life/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.fs
+/data/vincenzo/Dropbox/src/neca/life/life/bin/Debug/life.exe.mdb
+/data/vincenzo/Dropbox/src/neca/life/life/bin/Debug/life.exe
+/data/vincenzo/Dropbox/src/neca/life/life/obj/x86/Debug/life.exe
+/data/vincenzo/Dropbox/src/neca/life/life/obj/x86/Debug/life.exe.mdb

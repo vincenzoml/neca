@@ -1,0 +1,5 @@
+/home/vincenzo/vincenzo/Dropbox/src/neca/bagged1d/b1d/b1d/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.fs
+/home/vincenzo/vincenzo/Dropbox/src/neca/bagged1d/b1d/b1d/bin/Debug/b1d.exe.mdb
+/home/vincenzo/vincenzo/Dropbox/src/neca/bagged1d/b1d/b1d/bin/Debug/b1d.exe
+/home/vincenzo/vincenzo/Dropbox/src/neca/bagged1d/b1d/b1d/obj/x86/Debug/b1d.exe
+/home/vincenzo/vincenzo/Dropbox/src/neca/bagged1d/b1d/b1d/obj/x86/Debug/b1d.exe.mdb

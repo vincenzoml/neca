@@ -1,0 +1,5 @@
+"Rule: ocaml: ml -> cmo & cmi (%=neca )": "\223\191{0\174F<j\026\030u\028\243\175\162\141"
+"Rule: ocaml: ml & cmi -> cmx & o (%=neca )": "\177\014\015\229\253\230\189Y\169M\134\027\250sH\197"
+"Rule: ocaml: cmx* & o* -> native (%=neca )": "\r\169\243\006\1692E-XOTb\019H\252\138"
+"Resource: /data/vincenzo/Dropbox/src/neca/random/neca.ml": "\167g\r\134\220\142Z\229\128\022\138&\030\0228?"
+"Rule: ocaml dependencies ml (%=neca )": "\219\163\137\174\137\255\205|\024$\0161\206T\153O"
