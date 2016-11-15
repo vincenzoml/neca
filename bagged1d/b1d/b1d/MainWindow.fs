@@ -35,8 +35,7 @@ module MainWindow =
                                  ("Save",this.OnSave)
                                  ("Exit",Application.Quit)]);
                              ("Render",
-                                [("Toggle throttling",this.ToggleThrottling);
-                                 ("Toggle pause",this.TogglePause)])
+                                [("Next screen",this.Screen)])
                             ]
                 let mb = mkMenuBar menus    
                 this.SetDefaultSize(800, 600)                
@@ -49,33 +48,27 @@ module MainWindow =
                 let vp = new Gtk.Viewport()
                 let da = new DrawingArea()
                 da.DoubleBuffered <- true
-                da.Events <- da.Events ||| Gdk.EventMask.ScrollMask
                 da.ExposeEvent.AddHandler(fun o e -> this.OnDaExposeEvent(o,e))  
                 this.KeyReleaseEvent.AddHandler
                     (fun o e  ->
                         match e.Event.Key with
-                        | Gdk.Key.p -> this.TogglePause ()
-                        | Gdk.Key.t -> this.ToggleThrottling ()
                         | Gdk.Key.q -> Application.Quit ()
+                        | Gdk.Key.z -> this.zoomIn ()
+                        | Gdk.Key.x -> this.zoomOut ()
+                        | Gdk.Key.space -> this.Screen()
                         | _ -> ())                
-                da.ScrollEvent.AddHandler
-                    (fun o e -> 
-                        match e.Event.Direction with
-                        | Gdk.ScrollDirection.Up -> this.zoomIn ()
-                        | Gdk.ScrollDirection.Down -> this.zoomOut ()
-                        | _ -> ())
                 vp.Add(da)
                 sw.Add(vp)
                 vbox.Add(sw)
                 this.ShowAll()
                                       
                  
-        do ignore (GLib.Timeout.Add(100u,new GLib.TimeoutHandler(fun () -> this.QueueDraw();true)))       
+        //do ignore (GLib.Timeout.Add(500u,new GLib.TimeoutHandler(fun () -> this.QueueDraw();true)))       
 
                               
         let game =
-            let sizex = 100
-            let sizey = 1000
+            let sizex = 300
+            let sizey = 300
 
             let states = Array2D.create sizex sizey (0,(0.0,0.0,0.0))
             let crow = ref 0
@@ -86,10 +79,12 @@ module MainWindow =
             
             let lastid = ref 0
             let lastcol = ref (0.0,0.0,0.0)
+            let rnd = new System.Random()
             let newid () = 
                 let lid,(r,g,b) = !lastid,!lastcol
-                let inc = 1.0 / 100000.0
+                let inc =  1.0 / 100000.0
                 let (r1,g1,b1) = (r+inc,g+inc,b+inc) in
+                let sh = rnd.NextDouble()
                 let ncol = if (g1 > 1.0) then (if r1 > 1.0 then (0.0,0.0,0.0) else (r1,0.0,0.0)) else (r,g1,b1)
                 let nid = lid+1
                 lastid := nid
@@ -108,17 +103,24 @@ module MainWindow =
                 for i = 0 to Array.length p - 1 do
                     states.[(x+i)%sizex,cur ()] <- p.[i]
 
-            let a = obsid (255.0,0.0,0.0)
-            let b = obsid (255.0,255.0,0.0)
-            let c = obsid (255.0,0.0,255.0)
+            let red = obsid (255.0,0.0,0.0)
+            let yellow = obsid (255.0,255.0,0.0)
+            let purple = obsid (255.0,0.0,255.0)
 
-            let p1 = [|a;b;a;a|] 
-            let p2 = [|b;b;c;b|]
-            let p3 = [|a;b;a;c;a|]
+            //let p1 = [|a;b;a;a|] 
+            let r a b = [|a;b;a;a|]
+            let l a b = [|a;a;b;a|]            
+            let s a = 
+                let b = newid ()
+                let c = newid ()
+                [|a;b;a;c;a|]
 
-            put 10 p1
-            put 30 p2
-            put 50 p3
+            put 0 (s yellow)
+            put 30 (s red)
+            put 20 (r red yellow)
+            put 50 (s purple)
+
+            put 180 (l purple red)
 
             let rule0 ctx =
                 let groups = Seq.groupBy fst ctx 
@@ -136,9 +138,9 @@ module MainWindow =
             {   step = fun () ->                    
                     for i = 0 to sizex - 1 do
                         let ctx = Array.create 4 (0,(0.0,0.0,0.0))
-                        for j = 0 to 3 do ctx.[j] <- states.[(i-2+j+sizex)%sizex,cur ()]
+                        for j = 0 to 3 do ctx.[j] <- states.[(i-1+j+sizex)%sizex,cur ()]
                         states.[i,next ()] <- rule0 ctx
-                    cycle ()
+                    cycle ()                                
                 
                 loadState = fun s -> // stub
                     printf "load state: %s\n" s
@@ -148,28 +150,45 @@ module MainWindow =
 
                 blit = fun rect ->
                     Array2D.iteri (fun i j (_,c) ->   
-                                        let cx = ((i - (j/2) % sizex) + sizex) % sizex
+                                        let cx = ((i + (j/2) % sizex) + sizex) % sizex
                                         rect cx j c) states
                                                          
                 size = fun () -> (sizex,sizey) } // stub 
             
         
-        let throttling = ref true
-        let paused = ref false
+        let stepcnt = ref 0
+
+        let zoom = ref 0.0
+
         let idleHnd = new GLib.IdleHandler(fun () -> 
+                        if !zoom = 0.0 then this.initZoom()
+                        let y = fst (game.size ())
                         game.step()
-                        if not !throttling then this.QueueDraw()
-                        not !paused)
-        
+                        stepcnt := (!stepcnt + 1) % y
+                        if !stepcnt = y - 1
+                        then this.QueueDraw (); false
+                        else true)
+                                                     
         do ignore (GLib.Idle.Add(idleHnd))        
 
-        let zoom = ref 1.0
+
+        let size (win : Gdk.Window) = let rx,ry = ref 0,ref 0 in win.GetSize(rx,ry); !rx,!ry
+
+        member this.initZoom () = 
+            let (x,y) = size(this.GdkWindow) 
+            let (gx,gy) = game.size()
+            zoom := (float x) / (float gx)
+        
+        member this.Screen () =
+            ignore (GLib.Idle.Add(idleHnd))
 
         member this.zoomIn () = 
             zoom := min (!zoom + 0.5) 10.0
+            this.QueueDraw()
 
         member this.zoomOut () =
             zoom := max (!zoom - 0.5) 0.5
+            this.QueueDraw()
 
         member this.OnLoad () =
             use dlg = new Gtk.FileChooserDialog("load file",null,Gtk.FileChooserAction.Open,
@@ -190,12 +209,6 @@ module MainWindow =
             if dlg.Run() = int ResponseType.Accept 
             then game.saveState (dlg.Filename.ToString())
             dlg.Hide()
-
-        member this.ToggleThrottling () = throttling := not (!throttling)
-                              
-        member this.TogglePause () =
-            paused := not (!paused)
-            if not !paused then ignore (GLib.Idle.Add(idleHnd))
                               
         member this.OnDeleteEvent(o, e : DeleteEventArgs) = 
             Application.Quit()
@@ -204,15 +217,15 @@ module MainWindow =
         member this.OnDaExposeEvent(o, e) =
             let da = o :?> DrawingArea
             let win = da.GdkWindow
-            let wsx,wsy = let rx,ry = ref 0,ref 0 in win.GetSize(rx,ry); !rx,!ry
-            let fwsx,fwsy = float wsx,float wsy            
+            let fwsx,fwsy = let (x,y) = size win in float x,float y
             let (sx,sy) = game.size ()
             let fsx,fsy = (float sx,float sy)
-            da.SetSizeRequest(int (float sx * !zoom),int (float sy * !zoom))
             use cr = Gdk.CairoHelper.Create(win)
-            cr.Scale(!zoom * fwsx/fsx,!zoom * fwsy/fsy)
+            let factor = !zoom
+            da.SetSizeRequest(int (factor * fsx),int (factor * fsy))            
+            cr.Scale(factor,factor)
             let rect x y (r,g,b) = 
                 cr.SetSourceRGB(r,g,b) 
-                cr.Rectangle(float x,float y,3.0,3.0)
+                cr.Rectangle(float x - 0.1,float y - 0.1,1.1,1.1)
                 cr.Fill()
             game.blit rect
