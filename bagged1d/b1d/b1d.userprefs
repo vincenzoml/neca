@@ -1,10 +1,11 @@
-﻿<Properties StartupItem="b1d/b1d.fsproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+﻿<Properties StartupConfiguration="{D8D0574F-2583-44ED-A8E7-BCEE6505CB72}|Default">
   <MonoDevelop.Ide.Workbench ActiveDocument="b1d/MainWindow.fs">
     <Files>
-      <File FileName="b1d/MainWindow.fs" Line="191" Column="29" />
+      <File FileName="b1d/MainWindow.fs" Line="228" Column="28" />
     </Files>
   </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.ItemProperties.b1d PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>

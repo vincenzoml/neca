@@ -67,8 +67,8 @@ module MainWindow =
 
                               
         let game =
-            let sizex = 300
-            let sizey = 300
+            let sizex = 256
+            let sizey = 256
 
             let states = Array2D.create sizex sizey (0,(0.0,0.0,0.0))
             let crow = ref 0
@@ -85,7 +85,7 @@ module MainWindow =
                 let inc =  1.0 / 100000.0
                 let (r1,g1,b1) = (r+inc,g+inc,b+inc) in
                 let sh = rnd.NextDouble()
-                let ncol = if (g1 > 1.0) then (if r1 > 1.0 then (0.0,0.0,0.0) else (r1,0.0,0.0)) else (r,g1,b1)
+                let ncol = if (g1 >= 1.0) then (if r1 >= 1.0 then (0.0,0.0,0.0) else (r1,0.0,0.0)) else (r,g1,b1)
                 let nid = lid+1
                 lastid := nid
                 lastcol := ncol
@@ -103,11 +103,10 @@ module MainWindow =
                 for i = 0 to Array.length p - 1 do
                     states.[(x+i)%sizex,cur ()] <- p.[i]
 
-            let red = obsid (255.0,0.0,0.0)
-            let yellow = obsid (255.0,255.0,0.0)
-            let purple = obsid (255.0,0.0,255.0)
+            let red = obsid (1.0,0.0,0.0)
+            let yellow = obsid (1.0,1.0,0.0)
+            let purple = obsid (1.0,0.0,1.0)
 
-            //let p1 = [|a;b;a;a|] 
             let r a b = [|a;b;a;a|]
             let l a b = [|a;a;b;a|]            
             let s a = 
@@ -215,17 +214,24 @@ module MainWindow =
             e.RetVal <- true
 
         member this.OnDaExposeEvent(o, e) =
+            printf "draw start...\n"
             let da = o :?> DrawingArea
             let win = da.GdkWindow
-            let fwsx,fwsy = let (x,y) = size win in float x,float y
             let (sx,sy) = game.size ()
-            let fsx,fsy = (float sx,float sy)
             use cr = Gdk.CairoHelper.Create(win)
+            let v = Array.create (3 * sx * sy) (byte 255)
+            let rect x y (r,g,b) = 
+                let z = (y * 3 * sx) + (3 * x)
+                let conv v = byte (255.0 * v)
+                v.[z] <- conv r
+                v.[z+1] <- conv g
+                v.[z+2] <- conv b
+            game.blit rect
+            use gpb = new Gdk.Pixbuf(v,Gdk.Colorspace.Rgb,false,8,sx,sy,3*sx,null)
             let factor = !zoom
+            let fsx,fsy = (float sx,float sy)
             da.SetSizeRequest(int (factor * fsx),int (factor * fsy))            
             cr.Scale(factor,factor)
-            let rect x y (r,g,b) = 
-                cr.SetSourceRGB(r,g,b) 
-                cr.Rectangle(float x - 0.1,float y - 0.1,1.1,1.1)
-                cr.Fill()
-            game.blit rect
+            Gdk.CairoHelper.SetSourcePixbuf(cr,gpb,0.0,0.0)
+            cr.Paint()
+           
