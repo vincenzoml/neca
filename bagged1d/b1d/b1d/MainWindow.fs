@@ -61,11 +61,8 @@ module MainWindow =
                 sw.Add(vp)
                 vbox.Add(sw)
                 this.ShowAll()
-                                      
-                 
-        //do ignore (GLib.Timeout.Add(500u,new GLib.TimeoutHandler(fun () -> this.QueueDraw();true)))       
 
-                              
+                                                                      
         let game =
             let sizex = 256
             let sizey = 256
@@ -85,7 +82,7 @@ module MainWindow =
                 let inc =  1.0 / 100000.0
                 let (r1,g1,b1) = (r+inc,g+inc,b+inc) in
                 let sh = rnd.NextDouble()
-                let ncol = if (g1 >= 1.0) then (if r1 >= 1.0 then (0.0,0.0,0.0) else (r1,0.0,0.0)) else (r,g1,b1)
+                let ncol = if (g1 > 1.0) then (if r1 > 1.0 then (0.0,0.0,0.0) else (r1,0.0,0.0)) else (r,g1,b1)
                 let nid = lid+1
                 lastid := nid
                 lastcol := ncol
@@ -134,9 +131,10 @@ module MainWindow =
                     | [(1,_);(1,_);(1,_);(1,_)] -> newid ()                
                     | _ -> failwith "unexpected internal error in game rule application (use the source!)\n"
 
-            {   step = fun () ->                    
+            {   step = 
+                   fun () ->
+                    let ctx = Array.create 4 (0,(0.0,0.0,0.0))                                            
                     for i = 0 to sizex - 1 do
-                        let ctx = Array.create 4 (0,(0.0,0.0,0.0))
                         for j = 0 to 3 do ctx.[j] <- states.[(i-1+j+sizex)%sizex,cur ()]
                         states.[i,next ()] <- rule0 ctx
                     cycle ()                                
@@ -214,7 +212,6 @@ module MainWindow =
             e.RetVal <- true
 
         member this.OnDaExposeEvent(o, e) =
-            printf "draw start...\n"
             let da = o :?> DrawingArea
             let win = da.GdkWindow
             let (sx,sy) = game.size ()
@@ -231,6 +228,7 @@ module MainWindow =
             let factor = !zoom
             let fsx,fsy = (float sx,float sy)
             da.SetSizeRequest(int (factor * fsx),int (factor * fsy))            
+            //gpb.ScaleSimple(sx,sy,Gdk.InterpType.Tiles)
             cr.Scale(factor,factor)
             Gdk.CairoHelper.SetSourcePixbuf(cr,gpb,0.0,0.0)
             cr.Paint()
